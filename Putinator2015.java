@@ -15,20 +15,40 @@ package digittiteenirobo;
      */
     public class Putinator2015 extends AdvancedRobot
     {
-            private class enemyInfo
+            private class EnemyInfo
                         {
                                 private String name;
                                 private double bearing;
+                                private double energy;
                                 private double distance;
                                 private double heading;
                                 private double velocity;
-                                enemyInfo(ScannedRobotEvent e) {
-                                        name = e.getName();
+
+                                public EnemyInfo() {
+                                    name = "";   bearing = 0;
+                                    energy = 0;  distance = 0;
+                                    heading = 0; velocity = 0;
                                 }
+                                
                                 public String getName() { return name; }
+                                public double getBearing() { return bearing; }
+                                public double getEnergy() { return energy;}
+                                public double getDistance() { return distance; }
+                                public double getHeading() { return heading; }
+                                public double getVelocity() { return velocity; }
+                                public void refresh(ScannedRobotEvent e) {
+                                        name = e.getName();
+                                        bearing  = e.getBearing();
+                                        energy  = e.getEnergy();
+                                        distance  = e.getDistance();
+                                        heading  = e.getHeading();
+                                        velocity  = e.getBearing();
+                                }
+                                //TODO laske koordinaatit ennakointia varten
                         }
             private double moved = 0;
                         private int direction = 1;
+                        private EnemyInfo currentEnemy = new EnemyInfo();
             /**
              * run: Putinator2015's default behavior
              */
@@ -166,6 +186,14 @@ package digittiteenirobo;
              */
             public void onScannedRobot(ScannedRobotEvent e) {
                     // Replace the next line with any behavior you would like
+                    // Lukittuu lähimpään viholliseen
+                    if(e.getName().equals(currentEnemy.getName())) {
+                        currentEnemy.refresh(e);
+                    } else if(e.getDistance() < currentEnemy.getDistance()) {
+                        currentEnemy.refresh(e);
+                    }
+
+                    //TODO ammu lähempänä olevaa lujempaa?
                     fire(5);
                    
                    
@@ -184,8 +212,8 @@ package digittiteenirobo;
              */
             public void onHitWall(HitWallEvent e) {
                     // Replace the next line with any behavior you would like
-                    turnLeft(90);
-                    moved = 0;
+                   // turnLeft(90);
+                   // moved = 0;
                    
             }      
     }
