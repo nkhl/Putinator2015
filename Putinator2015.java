@@ -25,13 +25,16 @@ package digittiteenirobo;
             private double enemy_velocity = 0;
 
 
-            private double moved = 0;
+            private boolean forward = true;
             private int direction = 1;
             private boolean turning = false;
             private int gunScanAmount = 360; //Pyyhkäyisyn koko
             private int gunScanCurrent = 360; //Tämän hetkinen edistyminen
             private int gunScanDir = 1;      //Pyyhkäysin suunta
             private boolean gunScanned = false; // tuliko valmista?
+            private long deltaTime;
+            private long nowTime;
+            private Random rng;
             /**
              * run: Putinator2015's default behavior
              */
@@ -43,13 +46,22 @@ package digittiteenirobo;
      
                 setColors(Color.red,Color.blue,Color.green); // body,gun,radar
                 setAdjustGunForRobotTurn(true); //Ase ei pyöri robotin mukana
-     
+                rng = robocode.util.Utils.getRandom();
+                deltaTime = System.nanoTime() + ((long) (1000000000*rng.nextDouble())) + 30000000; //Time now + 10-0s + 3s
                 // Robot main loop
                 while(true) {
                     // Replace the next 4 lines with any behavior you would like
                     //if(getVelocity() == 0) move();
+                    
+                    nowTime = System.nanoTime();
+                    if(nowTime > deltaTime)
+                    {
+                            swapDirection();
+                            deltaTime = nowTime + ((long) (1000000000*rng.nextDouble())) + 30000000; //Time now + 10-0s + 3s
+                    }
                     move();
-                    scan();
+                    //scan();
+                    setTurnGunRight(1000);
                     execute();
                     setDebugProperty("enemyName", enemy_name);
                 }
@@ -60,17 +72,18 @@ package digittiteenirobo;
                     setTurnRight(enemy_bearing + 90);
                 else
                     setTurnLeft(-enemy_bearing + 90);
-                setAhead(250);
+                if(forward) setAhead(250);
+                else setBack(250);
             }
             public void scan() {
                     double current = getGunTurnRemaining();
                     if(current == 0)
                     {
-                        newScan(gunScanAmount*2, -1*gunScanDir);
-                        setTurnGunRight(gunScanCurrent);
+                        newScan((int)(gunScanAmount*1.5), -1*gunScanDir);
+                        setTurnGunRight(gunScanCurrent*gunScanDir);
                     }
                     else 
-                        setTurnGunRight(current);
+                        setTurnGunRight(current*gunScanDir);
             }
             /**
              * onScannedRobot: What to do when you see another robot
@@ -89,7 +102,10 @@ package digittiteenirobo;
                     }
                     
                     //TODO ammu lähempänä olevaa lujempaa?
-                    fire(5);
+                    int firepower = 1;
+                    if(enemy_distance < 400)
+                            firepower = (int) ( 8 - (enemy_distance/400)*8);
+                    fire(firepower);
                    
                    
             }
@@ -107,7 +123,11 @@ package digittiteenirobo;
              */
             public void onHitByBullet(HitByBulletEvent e) {
                     // Replace the next line with any behavior you would like
-                   
+                    swapDirection();
+            }
+            public void swapDirection() {
+                    if(forward) forward = false;     
+                    else forward = true;
             }
            
             /**
@@ -115,7 +135,8 @@ package digittiteenirobo;
              */
             public void onHitWall(HitWallEvent e) {
                     // Replace the next line with any behavior you would like
-                   turnLeft(90);
+                   //turnLeft(90);
+                   swapDirection();
                    // moved = 0;
                    
             }      
