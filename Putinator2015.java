@@ -15,44 +15,23 @@ package digittiteenirobo;
      */
     public class Putinator2015 extends AdvancedRobot
     {
-            private class EnemyInfo
-            {
-                private String name;
-                private double bearing;
-                private double energy;
-                private double distance;
-                private double heading;
-                private double velocity;
+             
+            //Enemy tracking
+            private String enemy_name = "";
+            private double enemy_bearing = 0;
+            private double enemy_energy = 0;
+            private double enemy_distance = 0;
+            private double enemy_heading = 0;
+            private double enemy_velocity = 0;
 
-                public EnemyInfo() {
-                    name = "";   bearing = 0;
-                    energy = 0;  distance = 0;
-                    heading = 0; velocity = 0;
-                }
-                
-                public String getName() { return name; }
-                public double getBearing() { return bearing; }
-                public double getEnergy() { return energy;}
-                public double getDistance() { return distance; }
-                public double getHeading() { return heading; }
-                public double getVelocity() { return velocity; }
-                public void refresh(ScannedRobotEvent e) {
-                    name = e.getName();
-                    bearing  = e.getBearing();
-                    energy  = e.getEnergy();
-                    distance  = e.getDistance();
-                    heading  = e.getHeading();
-                    velocity  = e.getBearing();
-                }
-                //TODO laske koordinaatit ennakointia varten
-            }
+
             private double moved = 0;
             private int direction = 1;
             private boolean turning = false;
-            private EnemyInfo currentEnemy = new EnemyInfo();
-            private int gunScanLeft = 360;
-            private int gunScanDir = 1;
-            private boolean gunScanned = false;
+            private int gunScanAmount = 360; //Pyyhkäyisyn koko
+            private int gunScanCurrent = 360; //Tämän hetkinen edistyminen
+            private int gunScanDir = 1;      //Pyyhkäysin suunta
+            private boolean gunScanned = false; // tuliko valmista?
             /**
              * run: Putinator2015's default behavior
              */
@@ -63,6 +42,7 @@ package digittiteenirobo;
                 // and the next line:
      
                 setColors(Color.red,Color.blue,Color.green); // body,gun,radar
+                setAdjustGunForRobotTurn(true); //Ase ei pyöri robotin mukana
      
                 // Robot main loop
                 while(true) {
@@ -71,19 +51,26 @@ package digittiteenirobo;
                     move();
                     scan();
                     execute();
+                    setDebugProperty("enemyName", enemy_name);
                 }
             }
             public void move() {
-                int enemyBearing = currentEnemy.getBearing();
-                if(enemyBearing > 0)
-                    setTurnRight(enemyBearing + 90);
+                setDebugProperty("enemyBearing", String.valueOf(enemy_bearing));
+                if(enemy_bearing > 0)
+                    setTurnRight(enemy_bearing + 90);
                 else
-                    setTurnLeft(-enemyBearing + 90);
+                    setTurnLeft(-enemy_bearing + 90);
                 setAhead(250);
             }
             public void scan() {
-                while(gunScanLeft
-                setTurnGunRight()
+                    double current = getGunTurnRemaining();
+                    if(current == 0)
+                    {
+                        newScan(gunScanAmount*2, -1*gunScanDir);
+                        setTurnGunRight(gunScanCurrent);
+                    }
+                    else 
+                        setTurnGunRight(current);
             }
             /**
              * onScannedRobot: What to do when you see another robot
@@ -91,19 +78,28 @@ package digittiteenirobo;
             public void onScannedRobot(ScannedRobotEvent e) {
                     // Replace the next line with any behavior you would like
                     // Lukittuu lähimpään viholliseen
-                    if(e.getName().equals("")) {
-                        currentEnemy.refresh(e);
+                    if(enemy_name.equals("")) {
+                        refresh_enemy(e);
 
-                    } else if(e.getName().equals(currentEnemy.getName())) {
-                        currentEnemy.refresh(e);
-                    } else if(e.getDistance() < currentEnemy.getDistance()) {
-                        currentEnemy.refresh(e);
+                    } else if(e.getName().equals(enemy_name)) {
+                        refresh_enemy(e);
+                        newScan(10,gunScanDir); 
+                    } else if(e.getDistance() < enemy_distance) {
+                        refresh_enemy(e);
                     }
                     
                     //TODO ammu lähempänä olevaa lujempaa?
                     fire(5);
                    
                    
+            }
+
+            public void newScan(int amount, int dir)
+            {
+                gunScanAmount = amount;
+                gunScanCurrent = amount;
+                gunScanDir = dir;
+                gunScanned = false;
             }
      
             /**
@@ -123,6 +119,14 @@ package digittiteenirobo;
                    // moved = 0;
                    
             }      
+            public void refresh_enemy(ScannedRobotEvent e) {
+                    enemy_name = new String(e.getName());
+                    enemy_bearing  = e.getBearing();
+                    enemy_energy  = e.getEnergy();
+                    enemy_distance  = e.getDistance();
+                    enemy_heading  = e.getHeading();
+                    enemy_velocity  = e.getBearing();
+           }
     }
 
 
