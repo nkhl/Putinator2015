@@ -48,6 +48,7 @@ package digittiteenirobo;
                         }
             private double moved = 0;
                         private int direction = 1;
+                        private boolean turning = false;
                         private EnemyInfo currentEnemy = new EnemyInfo();
             /**
              * run: Putinator2015's default behavior
@@ -63,15 +64,21 @@ package digittiteenirobo;
                     // Robot main loop
                     while(true) {
                             // Replace the next 4 lines with any behavior you would like
-                            if(getVelocity() == 0) move();
-                                                        setTurnGunLeft(1000);
+                            //if(getVelocity() == 0) move();
+                            move();
+                                                        setTurnGunLeft(10);
                                                         execute();
+                                                        while(getDistanceRemaining() > 0 && getTurnRemaining() > 0) {
+                                                            execute();
+                                                        }
+                                                        turning = false;
                             //scanForRobot();
                     }
             }
                         public void move() {
                                 //direction *= -1;
-                                startBehaviour();
+                                if(turning == false) startBehaviour();
+                                turning = true; 
                                 setAhead(80);
                         }
             public void scanForRobot(){
@@ -84,76 +91,83 @@ package digittiteenirobo;
                     oikeaKaari();
             }
             public void startBehaviour(){
+                    setDebugProperty("Kääntö","-");
+                    setDebugProperty("Battlefield_x",String.valueOf(getBattleFieldWidth()));
+                    setDebugProperty("Battlefield_y",String.valueOf(getBattleFieldHeight()));
+                    setDebugProperty("Condishun", String.valueOf((getX() < ((1/4)*getBattleFieldWidth())) && (getY() < ((1/4)*getBattleFieldHeight()))));
                     //Case alavasen
-                    if(getX() < getWidth()/4 && getY() < getHeight()/4 ){
+                    if( (getX() < ((1/4)*getBattleFieldWidth())) && (getY() < ((1/4)*getBattleFieldHeight())) ){
+                        setDebugProperty("Kääntö case","alavasen");
                         if(getHeading() < 225 && getHeading() > 90){
-                                turnLeft(getHeading() - 90);                                  
+                                setTurnLeft(getHeading() - 90); 
+                            setDebugProperty("Kääntö vasen",String.valueOf(getHeading()-90));
                         }else if(getHeading() < 360 && getHeading() >= 225){
-                                turnRight(360-getHeading());  
+                                setTurnRight(360 - getHeading());  
+                            setDebugProperty("Kääntö oikea",String.valueOf(360-getHeading()));
                         }
                     }
                     // Case ylävasen (kulma wrappaa ympäri)
-                    else if(getX() > (3/4)*getWidth()&& getY() < (1/4)*getHeight()){
+                    else if(getX() < (1/4)*getBattleFieldWidth() && getY() > (3/4)*getBattleFieldHeight()){
                         if(getHeading() < 315 &&  getHeading() > 180) {
-                            turnLeft(getHeading() - 180);
+                            setTurnLeft(getHeading() - 180);
                         } else if(getHeading() >= 315) {
-                            turnRight(360 - getHeading() + 90); //case 315 -- 360
+                            setTurnRight(360 - getHeading() + 90); //case 315 -- 360
                         } else if(getHeading() < 90) {
-                            turnRight(90 - getHeading()); //case 0 -- 90
+                            setTurnRight(90 - getHeading()); //case 0 -- 90
                         }
                     }
                     //Case alaoikea
-                    else if(getX() < (1/4)*getWidth() && getY() > (3/4)*getHeight()){
+                    else if(getX() > (3/4)*getBattleFieldWidth() && getY() < (1/4)*getBattleFieldHeight()){
                         if(getHeading() < 135) {
-                            turnLeft(getHeading());
+                            setTurnLeft(getHeading());
                         } else if(getHeading() >= 135 && getHeading() < 270) {
-                            turnRight(270 - getHeading());
+                            setTurnRight(270 - getHeading());
                         }
                     }
                     //Case yläoikea (wrappaa ympäri)
-                    else if(getX() > (3/4)*getWidth() && getY() > (3/4)*getHeight()){
+                    else if(getX() > (3/4)*getBattleFieldWidth() && getY() > (3/4)*getBattleFieldHeight()){
                         if(getHeading() < 45) {
-                            turnLeft(90 + getHeading());
+                            setTurnLeft(90 + getHeading());
                         } else if(getHeading() > 270) {
-                            turnLeft(getHeading() - 270);
+                            setTurnLeft(getHeading() - 270);
                         } else if(getHeading() >= 45 && getHeading() < 180) {
-                            turnRight(180 - getHeading());
+                            setTurnRight(180 - getHeading());
                         }
                     }
                     //Case yläkeski
-                    else if(( getX() >= (1/4)*getWidth() && getX() <= (3/4)*getWidth() ) &&
-                            ( getY() > (3/4)*getHeight()) ){
+                    else if(( getX() >= (1/4)*getBattleFieldWidth() && getX() <= (3/4)*getBattleFieldWidth() ) &&
+                            ( getY() > (3/4)*getBattleFieldHeight()) ){
                         if(getHeading() > 270) {
-                            turnLeft(getHeading() - 270);
+                            setTurnLeft(getHeading() - 270);
                         } else if(getHeading() < 90) {
-                            turnRight(90 - getHeading());
+                            setTurnRight(90 - getHeading());
                         }
                     }
                     //Case alakeski
-                    else if(( getX() >= (1/4)*getWidth() && getX() <= (3/4)*getWidth() ) &&
-                            ( getY() < (1/4)*getHeight()) ) {
+                    else if(( getX() >= (1/4)*getBattleFieldWidth() && getX() <= (3/4)*getBattleFieldWidth() ) &&
+                            ( getY() < (1/4)*getBattleFieldHeight()) ) {
                         if(getHeading() > 90 && getHeading() < 180) {
-                            turnLeft(getHeading() - 90);
+                            setTurnLeft(getHeading() - 90);
                         } else if(getHeading() < 270 && getHeading() >= 180) {
-                            turnRight(270 - getHeading());
+                            setTurnRight(270 - getHeading());
                         }
                     }
                     //Case vasenkeski
-                    else if(( getX() < (1/4)*getWidth() ) &&
-                            ( getY() >= (1/4)*getHeight() && getY() <= (3/4)*getHeight()) ){
+                    else if(( getX() < (1/4)*getBattleFieldWidth() ) &&
+                            ( getY() >= (1/4)*getBattleFieldHeight() && getY() <= (3/4)*getBattleFieldHeight()) ){
                         if(getHeading() < 270 && getHeading() > 180) {
-                            turnLeft(getHeading() - 180);
+                            setTurnLeft(getHeading() - 180);
                         } else if(getHeading() >= 270) {
-                            turnRight(360 - getHeading());
+                            setTurnRight(360 - getHeading());
                         }
                     }
                     //Case oikeakeski
-                    else if(( getX() > (3/4)*getWidth() ) &&
-                            ( getY() >= (1/4)*getHeight() && getY() <= (3/4)*getHeight()) ){
+                    else if(( getX() > (3/4)*getBattleFieldWidth() ) &&
+                            ( getY() >= (1/4)*getBattleFieldHeight() && getY() <= (3/4)*getBattleFieldHeight()) ){
                         if(getHeading() < 90) {
-                            turnLeft(getHeading());
+                            setTurnLeft(getHeading());
                         } else if(getHeading() >= 90 && getHeading() < 180) {
-                            turnRight(180 - getHeading());
+                            setTurnRight(180 - getHeading());
                         }
                     }
             }
@@ -212,7 +226,7 @@ package digittiteenirobo;
              */
             public void onHitWall(HitWallEvent e) {
                     // Replace the next line with any behavior you would like
-                   // turnLeft(90);
+                   turnLeft(90);
                    // moved = 0;
                    
             }      
