@@ -47,7 +47,7 @@ package digittiteenirobo;
                 setColors(Color.red,Color.blue,Color.green); // body,gun,radar
                 setAdjustGunForRobotTurn(true); //Ase ei pyöri robotin mukana
                 rng = robocode.util.Utils.getRandom();
-                deltaTime = System.nanoTime() + ((long) (1000000000*rng.nextDouble())) + 30000000; //Time now + 10-0s + 3s
+                deltaTime = System.nanoTime() + 1000000000L*((long)rng.nextInt(10)) + 3000000000L; //Time now + 10-0s + 3s
                 // Robot main loop
                 while(true) {
                     // Replace the next 4 lines with any behavior you would like
@@ -57,7 +57,8 @@ package digittiteenirobo;
                     if(nowTime > deltaTime)
                     {
                             swapDirection();
-                            deltaTime = nowTime + ((long) (1000000000*rng.nextDouble())) + 30000000; //Time now + 10-0s + 3s
+                            //deltaTime = nowTime + ((long) (10000000000*rng.nextDouble())) + 300000000; //Time now + 10-0s + 3s
+                            deltaTime = nowTime + 1000000000L*((long)rng.nextInt(10)) + 3000000000L; //Time now + 10-0s + 3s
                     }
                     move();
                     //scan();
