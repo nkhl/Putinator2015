@@ -26,6 +26,7 @@ package digittiteenirobo;
 
 
             private boolean forward = true;
+            private int moveTowardsDir = 1;
             private int direction = 1;
             private boolean turning = false;
             private int gunScanAmount = 360; //Pyyhkäyisyn koko
@@ -58,7 +59,7 @@ package digittiteenirobo;
                     {
                             swapDirection();
                             //deltaTime = nowTime + ((long) (10000000000*rng.nextDouble())) + 300000000; //Time now + 10-0s + 3s
-                            deltaTime = nowTime + 1000000000L*((long)rng.nextInt(10)) + 3000000000L; //Time now + 10-0s + 3s
+                            deltaTime = nowTime + 1000000000L*((long)rng.nextInt(10)) + 1000000000L; //Time now + 10-0s + 3s
                     }
                     move();
                     //scan();
@@ -69,10 +70,20 @@ package digittiteenirobo;
             }
             public void move() {
                 setDebugProperty("enemyBearing", String.valueOf(enemy_bearing));
+                int towardsWeight = 30;
+                if(enemy_distance < 200){
+                        moveTowardsDir = -1;
+                        towardsWeight = 60 - ((int)enemy_distance/200)*40;
+                }
+                else if(enemy_distance > 500){
+                        moveTowardsDir = 1;
+                        towardsWeight = 20;
+                }
+
                 if(enemy_bearing > 0)
-                    setTurnRight(enemy_bearing + 90);
+                    setTurnRight(enemy_bearing + 90 + towardsWeight*moveTowardsDir);
                 else
-                    setTurnLeft(-enemy_bearing + 90);
+                    setTurnLeft(-enemy_bearing + 90 + towardsWeight*moveTowardsDir);
                 if(forward) setAhead(250);
                 else setBack(250);
             }
@@ -101,12 +112,20 @@ package digittiteenirobo;
                     } else if(e.getDistance() < enemy_distance) {
                         refresh_enemy(e);
                     }
-                    
                     //TODO ammu lähempänä olevaa lujempaa?
                     int firepower = 1;
-                    if(enemy_distance < 400)
+                    if(getEnergy() > 40){ 
+                        if(enemy_distance < 400) {
                             firepower = (int) ( 8 - (enemy_distance/400)*8);
-                    fire(firepower);
+                            fire(firepower);
+                        }
+                       //Älä ammu liian kauas jos on vähän HP:ta
+                    } else {
+                            if(enemy_distance < 250) {
+                                firepower = (int) ( 8 - (enemy_distance/400)*4);
+                                fire(firepower);
+                            }
+                    }
                    
                    
             }
