@@ -15,6 +15,7 @@ public class Putinator2015 extends AdvancedRobot
 	private double moved;
 	private double maksimi;
 	private int suunta = 1;
+	private boolean lockedOn = false;
 	//Alternative battleMoven käyttöön koordinaatteja kentästä
 	private double width;
 	private double height;
@@ -42,6 +43,15 @@ public class Putinator2015 extends AdvancedRobot
 	xrb = xrt;
 	moved = 1;
 	maksimi = randomMaksimi();
+	
+		addCustomEvent(new Condition("triggerHit"){
+			public boolean test(){
+				return closeToWall();
+			}
+		});
+		
+		
+		
 		// Initialization of the robot should be put here
 
 		// After trying out your robot, try uncommenting the import at the top,
@@ -62,6 +72,20 @@ public class Putinator2015 extends AdvancedRobot
 		
 	}
 	
+	public boolean closeToWall(){
+			if(getHeading() == 90 || getHeading() == 270){
+					if(getX() >= xrt || getX() <= xlb){
+						return true;
+					}else { return false; }
+				
+				}else if(getHeading() == 0 || getHeading() == 180){
+					if(getY() >= 400 || getY() <= yrb){
+						return true;
+					}else { return false; }
+			}
+			return false;
+		}	
+
 	public void battleMove(){
 		while(moved<maksimi){
 			setTurnLeft(suunta * 1000);
@@ -76,8 +100,8 @@ public class Putinator2015 extends AdvancedRobot
 	}
 	
 	public void battleMove2(){
-	while(suunta == 1){
-		if(getHeading() == 90 || getHeading() == 270){
+	while(suunta == 1 && !lockedOn){
+	/*	if(getHeading() == 90 || getHeading() == 270){
 			if(getX() >= xrt || getX() <= xlb){
 				setTurnRight(90);
 				setTurnGunRight(180);
@@ -86,7 +110,7 @@ public class Putinator2015 extends AdvancedRobot
 			if(getY() >= 400 || getY() <= yrb){
 				setTurnRight(90);
 			}
-		}
+		}*/
 		setTurnGunLeft(1000);
 		ahead(1000);
 	}
@@ -101,6 +125,16 @@ public class Putinator2015 extends AdvancedRobot
 		fire(5);
 		
 		
+	}
+	
+	public void onCustomEvent(CustomEvent e) {
+		// If our custom event "triggerhit" went off,
+		if (e.getCondition().getName().equals("triggerHit")) {
+			// Adjust the trigger value, or
+			// else the event will fire again and again and again...
+			setTurnRight(90);
+			setTurnGunRight(180);
+		}
 	}
 	
 	public void startBehaviour(){
