@@ -15,10 +15,18 @@ public class Wallputinator1995 extends AdvancedRobot{
 	int metEnemy;
 	int direction = 1;
 	boolean ambushed = false;
+	boolean justStarted = true;
+	boolean turning = false;
 
 	
 
 	public void run(){
+		addCustomEvent(new Condition("gunAtWall"){
+			public boolean test(){
+				out.println("Testing gun");
+				return pointingGunAtWall();
+			}
+		});
 		setColors(Color.black,Color.yellow,Color.green);
 		basicMoveAmount = Math.max(getBattleFieldWidth()+50, 
 			getBattleFieldHeight()+50);
@@ -29,17 +37,48 @@ public class Wallputinator1995 extends AdvancedRobot{
 		findWall();
 		
 		while(true){
-			
+			justStarted = false;
+			turning = false;
 			peek = true;
 			ahead(direction*basicMoveAmount);
 			peek = false;
 			//turnRight(direction*90);
 		}
 	}
+	//Condition jonka avulla käännetään ase mikäli se sattuu seinää tuijottamaan.
+	public boolean pointingGunAtWall(){
+		if(direction == 1 && getGunHeading() == getHeading()-90){
+			out.println("tested : true : " + direction);
+			return true;
+		}else if(direction ==-1 && getGunHeading() == getHeading()+90){
+			out.println("tested : true : " + direction);
+			return true;
+		}else{
+			out.println("tested : false");
+			return false;
+		}
+	}
+	
+	//Ylemmän kondition toteutuessa toteutetaan seuraava koodi
+	public void onCustomEvent(CustomEvent e){
+		if(e.getCondition().getName().equals("gunAtWall")){
+			out.println("Rotating this bad motherfucker.");
+			turnGunRight(-direction*180);
+		}
+	}
+	
+	//Jos robotti löytää idiootteja jotka vaan lääppii seinää pitkin ja ampuu keskelle,
+	//Se räiskii niitä kunnes ne kuolee.
+	public void foundFuckingWallhuggers(ScannedRobotEvent e){
+		while(e.getEnergy() > getEnergy()){
+			fire(4);
+		}
+		direction = -direction;
+	}
 	
 	public void findWall(){
 		turnLeft(getHeading()%90);
-		ahead(basicMoveAmount);
+		ahead(direction*basicMoveAmount);
 	}
 	
 	public void onHitRobot(HitRobotEvent e){
@@ -49,7 +88,7 @@ public class Wallputinator1995 extends AdvancedRobot{
 		fire(6);
 		findWall();
 	}
-	
+	//Tutkii robotin taistelutilannetta ja lähettää sen karkuun mikäli tilanne on robotille huono.
 	public void onHitByBullet(HitByBulletEvent shot){
 		if(lockedOn){
 			if(shot.getBearing() > getHeading()+45 && shot.getBearing()< getHeading()+135){
@@ -65,13 +104,26 @@ public class Wallputinator1995 extends AdvancedRobot{
 	
 	public void onHitWall(HitWallEvent e){
 		back(direction*-1);
-		turnRight(90);
+		turning = true;
+		turnRight(direction*90);
+		turnGunLeft(direction*90);
+		turnGunRight(direction*90);
+		
 	}
 	/**
 	 * Scannerin ideana on lukittua viholliseen, katsoa vieläkö tämä on tutkan sisällä
 	 * Ja hallita tilannetta.
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
+		if(justStarted){
+			findWall();
+		}
+		
+		if(turning && e.getHeading() == getHeading()+180){
+			foundFuckingWallhuggers(e);
+			turning = false;
+		}
+	
 		if(ambushed){
 			ambushed = false;
 			findWall();
