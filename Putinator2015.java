@@ -23,6 +23,8 @@ package digittiteenirobo;
             private double enemy_distance = 0;
             private double enemy_heading = 0;
             private double enemy_velocity = 0;
+            private int enemy_x = 0;
+            private int enemy_y = 0;
 
 
             private boolean forward = true;
@@ -36,6 +38,10 @@ package digittiteenirobo;
             private long deltaTime;
             private long nowTime;
             private Random rng;
+
+            //Tähtäilymuutujia
+            private int firingTime = 1000;
+            private int firepower = 1;
             /**
              * run: Putinator2015's default behavior
              */
@@ -47,6 +53,8 @@ package digittiteenirobo;
      
                 setColors(Color.red,Color.blue,Color.green); // body,gun,radar
                 setAdjustGunForRobotTurn(true); //Ase ei pyöri robotin mukana
+                setAdjustRadarForRobotTurn(true); //Tutka ei pyöri robotin mukana
+                setAdjustRadarForGunTurn(true);   // Tutka ei pyöri aseen mukana
                 rng = robocode.util.Utils.getRandom();
                 deltaTime = System.nanoTime() + 1000000000L*((long)rng.nextInt(10)) + 3000000000L; //Time now + 10-0s + 3s
                 // Robot main loop
@@ -63,6 +71,9 @@ package digittiteenirobo;
                     }
                     move();
                     //scan();
+                    if(firingTime == getTime() && getGunTurnRemaining() == 0)
+                            setFire(firepower);
+                    setTurnRadarRight(1000);
                     setTurnGunRight(1000);
                     execute();
                     setDebugProperty("enemyName", enemy_name);
@@ -112,8 +123,9 @@ package digittiteenirobo;
                     } else if(e.getDistance() < enemy_distance) {
                         refresh_enemy(e);
                     }
-                    //TODO ammu lähempänä olevaa lujempaa?
-                    int firepower = 1;
+                    
+                    calculateAim();
+                    firepower = 1;
                     if(getEnergy() > 40){ 
                         if(enemy_distance < 400) {
                             firepower = (int) ( 8 - (enemy_distance/400)*8);
@@ -121,13 +133,17 @@ package digittiteenirobo;
                         }
                        //Älä ammu liian kauas jos on vähän HP:ta
                     } else {
-                            if(enemy_distance < 250) {
-                                firepower = (int) ( 8 - (enemy_distance/400)*4);
-                                fire(firepower);
-                            }
+                        if(enemy_distance < 250) {
+                            firepower = (int) ( 8 - (enemy_distance/400)*4);
+                            fire(firepower);
+                        }
                     }
                    
                    
+            }
+
+            public void calculateAim() {
+                    //TODO
             }
 
             public void newScan(int amount, int dir)
@@ -167,6 +183,8 @@ package digittiteenirobo;
                     enemy_distance  = e.getDistance();
                     enemy_heading  = e.getHeading();
                     enemy_velocity  = e.getBearing();
+
+                    //enemy_x = Math.asin(
            }
     }
 
