@@ -17,6 +17,7 @@ public class Wallputinator1995 extends AdvancedRobot{
 	boolean ambushed = false;
 	boolean justStarted = true;
 	boolean turning = false;
+	boolean wallhit = false;
 
 	
 
@@ -27,9 +28,10 @@ public class Wallputinator1995 extends AdvancedRobot{
 				return pointingGunAtWall();
 			}
 		});
+		
 		setColors(Color.black,Color.yellow,Color.green);
-		basicMoveAmount = Math.max(getBattleFieldWidth()+50, 
-			getBattleFieldHeight()+50);
+		basicMoveAmount = Math.max(getBattleFieldWidth()-50, 
+			getBattleFieldHeight()-50);
 		peek = false;
 		
 		//Tämä hoitaa käytännössä seinän etsimisen.
@@ -47,10 +49,10 @@ public class Wallputinator1995 extends AdvancedRobot{
 	}
 	//Condition jonka avulla käännetään ase mikäli se sattuu seinää tuijottamaan.
 	public boolean pointingGunAtWall(){
-		if(direction == 1 && getGunHeading() == getHeading()-90){
+		if(direction == 11 && getGunHeading()%getHeading()-90==0){
 			out.println("tested : true : " + direction);
 			return true;
-		}else if(direction ==-1 && getGunHeading() == getHeading()+90){
+		}else if(direction ==-1 && getGunHeading()%getHeading()+90==0){
 			out.println("tested : true : " + direction);
 			return true;
 		}else{
@@ -70,9 +72,7 @@ public class Wallputinator1995 extends AdvancedRobot{
 	//Jos robotti löytää idiootteja jotka vaan lääppii seinää pitkin ja ampuu keskelle,
 	//Se räiskii niitä kunnes ne kuolee.
 	public void foundFuckingWallhuggers(ScannedRobotEvent e){
-		while(e.getEnergy() > getEnergy()){
-			fire(4);
-		}
+		fire(20);
 		direction = -direction;
 	}
 	
@@ -82,7 +82,7 @@ public class Wallputinator1995 extends AdvancedRobot{
 	}
 	
 	public void onHitRobot(HitRobotEvent e){
-		
+		out.println("Hit another robot, must escape : "+ -direction);
 		turnLeft(-e.getBearing());
 		direction = -direction;
 		fire(6);
@@ -100,14 +100,26 @@ public class Wallputinator1995 extends AdvancedRobot{
 				
 			}
 		}
+		if((shot.getBearing()+180)%getHeading()==0){
+			wallhit = true;
+			if(wallhit){
+			turnLeft(-direction*90);
+		
+			ahead(direction*basicMoveAmount);
+			wallhit = false;
+			}
+			//findWall();
+			//fire(7);
+		}
 	}
-	
+	//Robotin kääntely toimii käytännössä tällä metodilla.
 	public void onHitWall(HitWallEvent e){
 		back(direction*-1);
 		turning = true;
 		turnRight(direction*90);
 		turnGunLeft(direction*90);
-		turnGunRight(direction*90);
+		turnGunRight(direction*180);
+		turnGunLeft(direction*90);
 		
 	}
 	/**
@@ -119,10 +131,14 @@ public class Wallputinator1995 extends AdvancedRobot{
 			findWall();
 		}
 		
-		if(turning && e.getHeading() == getHeading()+180){
+		if(turning && e.getHeading()+180%getHeading()==0){
 			foundFuckingWallhuggers(e);
 			turning = false;
+		}else if(turning){
+			turning = false;
 		}
+		
+
 	
 		if(ambushed){
 			ambushed = false;
