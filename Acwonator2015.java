@@ -40,6 +40,8 @@ package digittiteenirobo;
             private long nowTime;
             private Random rng;
 
+            private long lastTurnUpdate = 0;
+
             //Tähtäilymuutujia
             private int firingTime = 1000;
             private int firepower = 1;
@@ -64,17 +66,17 @@ package digittiteenirobo;
                     // Replace the next 4 lines with any behavior you would like
                     //if(getVelocity() == 0) move();
                     
-                    //nowTime = System.nanoTime();
-                    //if(nowTime > deltaTime)
-                    //{
-                    //        swapDirection();
-                    //        //deltaTime = nowTime + ((long) (10000000000*rng.nextDouble())) + 300000000; //Time now + 10-0s + 3s
-                    //        deltaTime = nowTime + 1000000000L*((long)rng.nextInt(10)) + 1000000000L; //Time now + 10-0s + 3s
-                    //}
+                   // nowTime = System.nanoTime();
+                   // if(nowTime > deltaTime)
+                   // {
+                   //         swapDirection();
+                   //         //deltaTime = nowTime + ((long) (10000000000*rng.nextDouble())) + 300000000; //Time now + 10-0s + 3s
+                   //         deltaTime = nowTime + 1000000000L*((long)rng.nextInt(10)) + 1000000000L; //Time now + 10-0s + 3s
+                   // }
                     move();
                     scan();
-                    if(firingTime == getTime() && getGunTurnRemaining() == 0)
-                            setFire(firepower);
+                    //if(firingTime == getTime() && getGunTurnRemaining() == 0)
+                    //        setFire(firepower);
                     execute();
                     setDebugProperty("enemyName", enemy_name);
                     setDebugProperty("enemyBearing", String.valueOf(enemy_bearing));
@@ -95,16 +97,22 @@ package digittiteenirobo;
                         moveTowardsDir = 1;
                         towardsWeight = 20;
                 }
-
-                if(enemy_bearing > 0)
-                    setTurnRight(enemy_bearing + 90 + towardsWeight*moveTowardsDir);
-                else
-                    setTurnLeft(-enemy_bearing + 90 + towardsWeight*moveTowardsDir);
+                //Älä päivitä käännöstä liian usein (Muuttuu muurinmurtajaksi)
+                if(lastTurnUpdate + 15 < getTime()) {
+                    if(enemy_bearing > 0)
+                        //setTurnRight(enemy_bearing + 90 + towardsWeight*moveTowardsDir);
+                        setTurnRight(enemy_bearing + 90);
+                    else
+                        //setTurnLeft(-enemy_bearing + 90 + towardsWeight*moveTowardsDir);
+                        setTurnLeft(-enemy_bearing + 90);
+                    if(forward == false) forward = true;
+                    lastTurnUpdate = getTime();
+                }
                 if(forward) setAhead(250);
-                else setBack(250);
+                else setBack(250); 
             }
             public void scan() {
-                if(enemy_name.equals("") || lastSeen > getTime() + 30) setTurnRadarRight(30);
+                if(enemy_name.equals("") || lastSeen > getTime() + 10) setTurnRadarRight(30);
                 else {
                     //Acwocode
                     double position;
@@ -182,9 +190,10 @@ package digittiteenirobo;
                                      if(enemy_distance < 150.0){
                                              fire(Rules.MAX_BULLET_POWER);
                                      }
-                                     else{
-                                             fire(1);
-                                     }
+                                     else if(enemy_distance < 200.0){ fire(4); }
+                                     else if(enemy_distance < 250.0){ fire(3); }
+                                     else if(enemy_distance < 300.0){ fire(2); }
+                                     else if(enemy_distance < 500.0){ fire(1); }
                              }
                      }
                      else{
