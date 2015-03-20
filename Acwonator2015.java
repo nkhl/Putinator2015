@@ -41,11 +41,13 @@ package digittiteenirobo;
             private Random rng;
 
             private long lastTurnUpdate = 0;
+            private long lastDirSwap = 0;
 
             //Tähtäilymuutujia
             private int firingTime = 1000;
             private int firepower = 1;
             private long lastSeen = 100000;
+            
             /**
              * run: Putinator2015's default behavior
              */
@@ -112,7 +114,7 @@ package digittiteenirobo;
                 else setBack(250); 
             }
             public void scan() {
-                if(enemy_name.equals("") || lastSeen > getTime() + 10) setTurnRadarRight(30);
+                if(enemy_name.equals("") || lastSeen  > getTime() + 10) setTurnRadarRight(30);
                 else {
                     //Acwocode
                     double position;
@@ -143,7 +145,7 @@ package digittiteenirobo;
                         doFire();
                     } else if(e.getName().equals(enemy_name)) {
                         refresh_enemy(e);
-                        lastSeen = getTime();
+                        if(lastSeen + 5 < getTime()) lastSeen = getTime();
                         //newScan(10,gunScanDir); 
                         doFire();
                     } else if(e.getDistance() < enemy_distance) {
@@ -184,21 +186,22 @@ package digittiteenirobo;
                     turn = enemy_bearing + (getHeading() - getGunHeading());
                     if(turn > 180) turn = turn - 360;
                     //turn = normalRelativeAngleDegrees(enemy_bearing + (getHeading() - getGunHeading()));
-                     if(Math.abs(turn) <= 1){
-                             setTurnGunRight(turn);
+                     if(Math.abs(turn) <= 1 || (enemy_velocity < 3 && Math.abs(turn) <= 5) ){
+                             //setTurnGunRight(turn);
                              if(getGunHeat() == 0){
                                      if(enemy_distance < 150.0){
                                              fire(Rules.MAX_BULLET_POWER);
                                      }
-                                     else if(enemy_distance < 200.0){ fire(4); }
-                                     else if(enemy_distance < 250.0){ fire(3); }
-                                     else if(enemy_distance < 300.0){ fire(2); }
-                                     else if(enemy_distance < 500.0){ fire(1); }
+                                     else if(enemy_distance < 180.0){ fire(4); }
+                                     else if(enemy_distance < 220.0){ fire(3); }
+                                     else if(enemy_distance < 280.0){ fire(2); }
+                                     else if(enemy_distance < 300.0){ fire(1); }
                              }
                      }
-                     else{
-                             setTurnGunRight(turn);
-                     }
+                   //  else{
+                   //          setTurnGunRight(turn);
+                   //  }
+                    setTurnGunRight(turn);
                     //Acwocode
             }
             public void calculateAim() {
@@ -218,11 +221,14 @@ package digittiteenirobo;
              */
             public void onHitByBullet(HitByBulletEvent e) {
                     // Replace the next line with any behavior you would like
+                //if(e.getDistance() < enemy_distance) refresh_enemy(e);
+                if(lastDirSwap + 15 < getTime()) 
                     swapDirection();
             }
             public void swapDirection() {
                     if(forward) forward = false;     
                     else forward = true;
+                    lastDirSwap = getTime();
             }
            
             /**
@@ -235,6 +241,10 @@ package digittiteenirobo;
                    // moved = 0;
                    
             }      
+            public void onHitRobot(HitRobotEvent e) {
+                //if(e.getDistance() < enemy_distance) refresh_enemy(e);
+                swapDirection();
+            }
             public void refresh_enemy(ScannedRobotEvent e) {
                     enemy_name = new String(e.getName());
                     enemy_bearing  = e.getBearing();
